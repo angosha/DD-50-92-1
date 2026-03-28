@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Майқы би - Тест</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .quiz-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        .progress {
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .question {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        button:hover:not(:disabled) {
+            background-color: #f0f4f8;
+            border-color: #bdc3c7;
+        }
+        button:disabled {
+            cursor: not-allowed;
+        }
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 24px;
+        }
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+        .result-container h2 {
+            font-size: 28px;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-container">
+    <h1>Дала данышпаны Майқы би</h1>
+    <div class="progress" id="progress">Сұрақ: 1 / 30</div>
+    <div class="question" id="question">Сұрақ осында болады</div>
+    <div class="options" id="options">
+        </div>
+    <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="quiz-container result-container" id="result-container">
+    <h2>Тест аяқталды!</h2>
+    <p id="score-text"></p>
+    <button onclick="location.reload()" style="text-align: center; margin-top: 20px;">Қайта бастау</button>
+</div>
+
+<script>
+    // 50-92 беттерден алынған сұрақтар
+    const quizData = [
+        {
+            question: "М. Сүлейменовтің зерттеуі бойынша «Билік» ілімінің негізін қалаған кім?",
+            options: ["Майқы би", "Алтай би", "Арыс би", "Төле би"],
+            answer: 1
+        },
+        {
+            question: "«Билік» іліміне жүйелі сипат берген кім?",
+            options: ["Арыс би", "Алтай би", "Майқы би", "Аяз би"],
+            answer: 0
+        },
+        {
+            question: "Шыңғыс хан «Билік» іліміне қашан реформа жасауды ұйғарды?",
+            options: ["1153 жылы", "1225 жылы", "1206 жылы", "1208 жылы"],
+            answer: 2
+        },
+        {
+            question: "Шыңғыс хан жаңа символикалық тіл жасауды кімге тапсырды?",
+            options: ["Аяз биге", "Құмырсқа биге", "Майқы биге", "Төбе биге"],
+            answer: 2
+        },
+        {
+            question: "«Ақ найзаның ұшымен, ақ білектің күшімен» ұранындағы «ақ білек» сөзі бастапқыда қандай мағынада қолданылған?",
+            options: ["Ақ найза", "Ақ билік", "Ақ жүрек", "Ақыл-ой"],
+            answer: 1
+        },
+        {
+            question: "Шыңғысты іздеп табуға қанша би жолға шығады?",
+            options: ["7 би", "10 би", "12 би", "40 би"],
+            answer: 1
+        },
+        {
+            question: "Шыңғыс ханға анасы Аланғудың мөрі бар жүзігін көрсеткен би кім?",
+            options: ["Керейіт би", "Темір-құтлық би", "Тама би", "Майқы би"],
+            answer: 3
+        },
+        {
+            question: "Шыңғыс ханның ордасына бірінші болып кім кірді?",
+            options: ["Шыңғыс ханның өзі", "Қоңырат би", "Майқы би", "Керейіт би"],
+            answer: 2
+        },
+        {
+            question: "Мұхаммед Халел Сүлейменов қай саланың ғалымы болған?",
+            options: ["Химия", "Биология", "Физика", "Математика"],
+            answer: 2
+        },
+        {
+            question: "Қазақ халқының бейнелі ойлау жүйесінде мидың қай шарының жұмысына көбірек орын берілген?",
+            options: ["Сол жақ", "Оң жақ", "Екі жағы да тең", "Мишық"],
+            answer: 1
+        },
+        {
+            question: "Майқы бидің сенімді серіктері болған, елшілік-жаушылықпен айналысқан екі би кім?",
+            options: ["Төле мен Қазыбек", "Алшын мен Қоғам", "Аяз бен Құмырсқа", "Дәулеткелді мен Қунақ"],
+            answer: 2
+        },
+        {
+            question: "Майқы би кәуір еліне қай батырды елшілікке жіберді?",
+            options: ["Төлен батырды", "Қарабалуанды", "Шақшақ Жәнібекті", "Алдияр батырды"],
+            answer: 0
+        },
+        {
+            question: "Майқы би дипломатиясындағы «май тілі» нені білдіреді?",
+            options: ["Кінәласу", "Қан төгіп жауласу", "Татуласу, берекеге жақындасу", "Сабырсыздық"],
+            answer: 2
+        },
+        {
+            question: "Жошыны ақ киізге салып хан көтерген ұлы сайлау қай өзеннің бойында өтті?",
+            options: ["Сырдария", "Қаракеңгір", "Шу", "Ертіс"],
+            answer: 1
+        },
+        {
+            question: "Майқы бидің «Жеті жарғысы» бойынша майданда өлген ерлерге қанша құн төленді?",
+            options: ["100 бесті", "50 құлынды бие", "200 жылқы", "Құн төленбеді"],
+            answer: 0
+        },
+        {
+            question: "Майқы заңы бойынша, неке бұзған еркекке қандай жаза қолданылды?",
+            options: ["Өлім жазасы", "100 қамшы", "40 дүре", "Мал құнын төлеу"],
+            answer: 2
+        },
+        {
+            question: "Майқы бидің мал құны туралы заңында майталман жорға, қараүзген бәйге аттардың құны қанша болды?",
+            options: ["100 қой", "50 қой", "25 қой", "10 қой"],
+            answer: 0
+        },
+        {
+            question: "Сабаз атан мен нар түйеге қанша қой құн берілді?",
+            options: ["100 қой", "50 қой", "25 қой", "10 қой"],
+            answer: 2
+        },
+        {
+            question: "«Қасым ханның қасқа жолы» неше тараудан тұрады?",
+            options: ["3", "5", "7", "9"],
+            answer: 1
+        },
+        {
+            question: "Ежелгі «Жасақ» заңнамасында «Ақ сүйек» сөзі қандай мағына берген?",
+            options: ["Байлықты", "Тазалықты", "Денені басқаратын басшылықты (бас сүйекті)", "Қасиетті адамды"],
+            answer: 2
+        },
+        {
+            question: "«Жасақ» заңнамасы бойынша мемлекетті қорғайтын «қол» деп кімдерді атаған?",
+            options: ["Малшыларды", "Күшті әскер мен қару жасаушыларды", "Билерді", "Хандарды"],
+            answer: 1
+        },
+        {
+            question: "Майқы би ілімі бойынша, «Ойланбай аяқ баспаңдар!» деген нақыл кімнен қалған?",
+            options: ["Әзден", "Ардан", "Мәннен", "Кейкіден"],
+            answer: 0
+        },
+        {
+            question: "«Алтау ала болса ауыздағы кетеді» мәтелінің Майқы би айтқан бастапқы нұсқасында қалай жалғасады?",
+            options: ["Төртеу түгел болса, төбедегі келеді", "Бесеу біріксе, берместі алады", "Екеу тату болса, еңбек өнеді", "Үшеу үндессе, үміт орындалады"],
+            answer: 1
+        },
+        {
+            question: "Майқы би: «Естіге айтқан тура сөз...» - деп басталатын нақылды неге теңейді?",
+            options: ["Құмға сіңген суға", "Шыңға тіккен туға", "Аққан дарияға", "Жарқыраған күнге"],
+            answer: 1
+        },
+        {
+            question: "Майқы бидің «Би болмасаң да, би түсетін үй бол» деуінің басты себебі неде?",
+            options: ["Қонақжайлылықты арттыру", "Үйдің байлығын көрсету", "Әділдікке (ақтыққа) қызмет ету", "Атақ жинау"],
+            answer: 2
+        },
+        {
+            question: "Төле би қыздар мен әйелдерге арнап ашқан мектеп қалай аталды?",
+            options: ["Қызыл тіл", "Билік", "Жасау ізі", "Ана мектебі"],
+            answer: 2
+        },
+        {
+            question: "Ахмет Байтұрсынұлы сөз өнері кітабында көрнек өнерін неше тарауға жіктейді?",
+            options: ["3", "4", "5", "7"],
+            answer: 2
+        },
+        {
+            question: "Сәкен Сейфуллиннің мақаласы бойынша билердің басты қызметтерінің бірі қандай болған?",
+            options: ["Жауға қарсы қол бастау", "Салық жинау", "Тұрмыс тәжірибесінен қорытынды шығарып, жадқа жеңіл заң-ереже жасау", "Ханды сайлау"],
+            answer: 2
+        },
+        {
+            question: "Әйтеке би қай медреседе білім алған?",
+            options: ["Уфадағы «Ғалия»", "Бұхарадағы «Мир Араб»", "Самарқандағы «Ұлықбек» және «Шердор»", "Түркістандағы медреседе"],
+            answer: 2
+        },
+        {
+            question: "Майқы бидің тұжырымы бойынша: «Аспан ашық болса, күн шуақты болады. Хан әділ болса...» қалай жалғасады?",
+            options: ["Ел бай болады", "Жау қашады", "Халық ынтымақты болады", "Жер көгереді"],
+            answer: 2
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let acceptingAnswers = true;
+
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const progressEl = document.getElementById('progress');
+    const quizContainer = document.getElementById('quiz-container');
+    const resultContainer = document.getElementById('result-container');
+    const scoreText = document.getElementById('score-text');
+
+    function loadQuestion() {
+        acceptingAnswers = true;
+        feedbackEl.innerText = '';
+        optionsEl.innerHTML = '';
+        
+        const currentData = quizData[currentQuestionIndex];
+        questionEl.innerText = currentData.question;
+        progressEl.innerText = `Сұрақ: ${currentQuestionIndex + 1} / ${quizData.length}`;
+
+        currentData.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.innerText = option;
+            button.onclick = () => checkAnswer(index, button);
+            optionsEl.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIndex, button) {
+        if (!acceptingAnswers) return;
+        acceptingAnswers = false;
+
+        const currentData = quizData[currentQuestionIndex];
+        const correctIndex = currentData.answer;
+        const allButtons = optionsEl.querySelectorAll('button');
+
+        // Disable all buttons
+        allButtons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            button.classList.add('correct');
+            feedbackEl.innerText = "Дұрыс!";
+            feedbackEl.style.color = "#28a745";
+            score++;
+        } else {
+            button.classList.add('incorrect');
+            allButtons[correctIndex].classList.add('correct');
+            feedbackEl.innerText = "Қате! Дұрыс жауап жасылмен белгіленді.";
+            feedbackEl.style.color = "#dc3545";
+        }
+
+        setTimeout(nextQuestion, 2000);
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        quizContainer.style.display = 'none';
+        resultContainer.style.display = 'block';
+        scoreText.innerText = `Сіз ${quizData.length} сұрақтың ${score} сұрағына дұрыс жауап бердіңіз!`;
+    }
+
+    // Бастау
+    loadQuestion();
+</script>
+
+</body>
+</html>
